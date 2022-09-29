@@ -113,6 +113,11 @@ func populateBody(rv reflect.Value, ty reflect.Type, tags *fieldTags, dst *hclwr
 		}
 
 		if _, isAttr := tags.Attributes[name]; isAttr {
+			if tags.Optional[name] {
+				if fieldVal.IsZero() {
+					continue
+				}
+			}
 
 			if exprType.AssignableTo(fieldTy) || attrType.AssignableTo(fieldTy) {
 				continue // ignore undecoded fields
