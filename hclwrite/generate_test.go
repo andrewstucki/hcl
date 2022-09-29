@@ -122,16 +122,24 @@ func TestTokensForValue(t *testing.T) {
 			cty.StringVal("hello\nworld\n"),
 			Tokens{
 				{
-					Type:  hclsyntax.TokenOQuote,
-					Bytes: []byte(`"`),
+					Type:  hclsyntax.TokenOHeredoc,
+					Bytes: []byte(`<<-HEREDOC`),
+				},
+				{
+					Type:  hclsyntax.TokenNewline,
+					Bytes: []byte("\n"),
 				},
 				{
 					Type:  hclsyntax.TokenQuotedLit,
-					Bytes: []byte(`hello\nworld\n`),
+					Bytes: []byte("hello\nworld\n"),
 				},
 				{
-					Type:  hclsyntax.TokenCQuote,
-					Bytes: []byte(`"`),
+					Type:  hclsyntax.TokenNewline,
+					Bytes: []byte("\n"),
+				},
+				{
+					Type:  hclsyntax.TokenCHeredoc,
+					Bytes: []byte(`HEREDOC`),
 				},
 			},
 		},
@@ -139,16 +147,24 @@ func TestTokensForValue(t *testing.T) {
 			cty.StringVal("hello\r\nworld\r\n"),
 			Tokens{
 				{
-					Type:  hclsyntax.TokenOQuote,
-					Bytes: []byte(`"`),
+					Type:  hclsyntax.TokenOHeredoc,
+					Bytes: []byte(`<<-HEREDOC`),
+				},
+				{
+					Type:  hclsyntax.TokenNewline,
+					Bytes: []byte("\n"),
 				},
 				{
 					Type:  hclsyntax.TokenQuotedLit,
-					Bytes: []byte(`hello\r\nworld\r\n`),
+					Bytes: []byte("hello\r\nworld\r\n"),
 				},
 				{
-					Type:  hclsyntax.TokenCQuote,
-					Bytes: []byte(`"`),
+					Type:  hclsyntax.TokenNewline,
+					Bytes: []byte("\n"),
+				},
+				{
+					Type:  hclsyntax.TokenCHeredoc,
+					Bytes: []byte(`HEREDOC`),
 				},
 			},
 		},

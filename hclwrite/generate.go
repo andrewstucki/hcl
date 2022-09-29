@@ -212,23 +212,44 @@ func appendTokensForValue(val cty.Value, toks Tokens) Tokens {
 		})
 
 	case val.Type() == cty.String:
-		// TODO: If it's a multi-line string ending in a newline, format
-		// it as a HEREDOC instead.
-		src := escapeQuotedStringLit(val.AsString())
-		toks = append(toks, &Token{
-			Type:  hclsyntax.TokenOQuote,
-			Bytes: []byte{'"'},
-		})
-		if len(src) > 0 {
+		src, hasNewlines := escapeQuotedStringLit(val.AsString())
+		if hasNewlines {
+			toks = append(toks, &Token{
+				Type:  hclsyntax.TokenOHeredoc,
+				Bytes: []byte("<<-HEREDOC"),
+			})
+			toks = append(toks, &Token{
+				Type:  hclsyntax.TokenNewline,
+				Bytes: []byte("\n"),
+			})
 			toks = append(toks, &Token{
 				Type:  hclsyntax.TokenQuotedLit,
-				Bytes: src,
+				Bytes: []byte(val.AsString()),
+			})
+			toks = append(toks, &Token{
+				Type:  hclsyntax.TokenNewline,
+				Bytes: []byte("\n"),
+			})
+			toks = append(toks, &Token{
+				Type:  hclsyntax.TokenCHeredoc,
+				Bytes: []byte("HEREDOC"),
+			})
+		} else {
+			toks = append(toks, &Token{
+				Type:  hclsyntax.TokenOQuote,
+				Bytes: []byte{'"'},
+			})
+			if len(src) > 0 {
+				toks = append(toks, &Token{
+					Type:  hclsyntax.TokenQuotedLit,
+					Bytes: src,
+				})
+			}
+			toks = append(toks, &Token{
+				Type:  hclsyntax.TokenCQuote,
+				Bytes: []byte{'"'},
 			})
 		}
-		toks = append(toks, &Token{
-			Type:  hclsyntax.TokenCQuote,
-			Bytes: []byte{'"'},
-		})
 
 	case val.Type().IsListType() || val.Type().IsSetType() || val.Type().IsTupleType():
 		toks = append(toks, &Token{
@@ -344,14 +365,15 @@ func appendTokensForTraversalStep(step hcl.Traverser, toks Tokens) Tokens {
 	return toks
 }
 
-func escapeQuotedStringLit(s string) []byte {
+func escapeQuotedStringLit(s string) (buf []byte, newlines bool) {
 	if len(s) == 0 {
-		return nil
+		return
 	}
-	buf := make([]byte, 0, len(s))
+	buf = make([]byte, 0, len(s))
 	for i, r := range s {
 		switch r {
 		case '\n':
+			newlines = true
 			buf = append(buf, '\\', 'n')
 		case '\r':
 			buf = append(buf, '\\', 'r')
@@ -382,7 +404,7 @@ func escapeQuotedStringLit(s string) []byte {
 			}
 		}
 	}
-	return buf
+	return
 }
 
 func appendRune(b []byte, r rune) []byte {
